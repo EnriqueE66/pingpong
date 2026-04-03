@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>PING PONG</title>
 <style>
   :root {
@@ -47,16 +48,17 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    justify-content:center;
+    justify-content:flex-start;
   }
 
+  /* ── Score bar ── */
   #scorebar {
     flex-shrink:0;
     display:flex;
     align-items:center;
     justify-content:center;
     gap:clamp(12px,4vw,48px);
-    padding: 8px 0 4px;
+    padding: 6px 0 4px;
     width:100%;
   }
 
@@ -65,52 +67,19 @@
   .p-label.pink { color:rgba(255,0,110,0.5); }
 
   .scores { display:flex; align-items:center; gap:clamp(8px,2.5vw,24px); }
-  .score { font-size:clamp(28px,7vw,52px); font-weight:900; line-height:1; }
+  .score { font-size:clamp(26px,7vw,52px); font-weight:900; line-height:1; }
   .score.left  { color:var(--cyan); text-shadow:var(--glow-c); }
   .score.right { color:var(--pink); text-shadow:var(--glow-p); }
-  .score-sep   { font-size:clamp(20px,5vw,36px); color:rgba(255,255,255,0.15); }
+  .score-sep   { font-size:clamp(18px,5vw,36px); color:rgba(255,255,255,0.15); }
 
-  #gameRow {
-    flex:1; min-height:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    width:100%;
-    padding:4px 6px;
-    gap:8px;
-  }
-
-  .t-zone {
-    display:none;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:14px;
-    flex-shrink:0;
-  }
-  .t-zone.show { display:flex; }
-
-  .t-btn {
-    width:clamp(50px,12vw,72px);
-    height:clamp(50px,12vw,72px);
-    border-radius:50%;
-    border:2px solid;
-    display:flex; align-items:center; justify-content:center;
-    font-size:clamp(18px,4vw,26px);
-    cursor:pointer;
-    background:rgba(255,255,255,0.03);
-    transition:opacity .1s, transform .1s;
-    touch-action:none;
-  }
-  .t-btn:active, .t-btn.on { opacity:.5; transform:scale(.93); }
-  .t-zone.left  .t-btn { border-color:rgba(0,245,255,0.4); color:var(--cyan); }
-  .t-zone.right .t-btn { border-color:rgba(255,0,110,0.4);  color:var(--pink); }
-
+  /* ── Canvas wrap ── */
   #cWrap {
     position:relative;
     border:1px solid rgba(0,245,255,0.2);
     box-shadow:0 0 40px rgba(0,245,255,0.07), inset 0 0 40px rgba(0,0,0,0.5);
     flex-shrink:0;
+    /* centered horizontally */
+    margin: 0 auto;
   }
   #cWrap::before, #cWrap::after {
     content:''; position:absolute;
@@ -122,6 +91,57 @@
 
   canvas { display:block; background:var(--mid); }
 
+  /* ── Bottom touch controls (mobile only) ── */
+  #touchBar {
+    display: none;
+    flex-shrink: 0;
+    width: 100%;
+    height: 80px;
+    flex-direction: row;
+  }
+  body.touch #touchBar { display: flex; }
+
+  .touch-half {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 8px 12px;
+  }
+
+  .touch-half.left  { border-right: 1px solid rgba(255,255,255,0.06); }
+
+  .t-btn {
+    width:  54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 2px solid;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    cursor: pointer;
+    background: rgba(255,255,255,0.03);
+    transition: opacity .1s, transform .1s;
+    touch-action: none;
+    flex-shrink: 0;
+  }
+  .t-btn:active, .t-btn.on { opacity:.45; transform:scale(.9); }
+  .touch-half.left  .t-btn { border-color:rgba(0,245,255,0.45); color:var(--cyan); }
+  .touch-half.right .t-btn { border-color:rgba(255,0,110,0.45);  color:var(--pink); }
+
+  .t-label {
+    font-family: var(--f2);
+    font-size: 8px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.18);
+    text-align: center;
+    line-height: 1.4;
+  }
+  .t-label.c { color: rgba(0,245,255,0.35); }
+  .t-label.p { color: rgba(255,0,110,0.35); }
+
+  /* ── Desktop footer ── */
   #footer {
     flex-shrink:0;
     font-family:var(--f2);
@@ -130,22 +150,24 @@
     color:rgba(255,255,255,0.1);
     text-transform:uppercase;
     padding:4px 0 6px;
+    margin-top: auto;
   }
   body.touch #footer { display:none; }
 
+  /* ── Overlays ── */
   .overlay {
     position:absolute; inset:0;
     display:flex; flex-direction:column;
     align-items:center; justify-content:center;
     background:rgba(4,4,15,0.93);
     z-index:20;
-    gap:clamp(12px,2.5vh,26px);
+    gap:clamp(10px,2.2vh,24px);
     backdrop-filter:blur(4px);
   }
   .overlay.hidden { display:none; }
 
   .ov-title {
-    font-size:clamp(28px,8vw,56px);
+    font-size:clamp(26px,8vw,56px);
     font-weight:900;
     letter-spacing:clamp(4px,1.5vw,8px);
     color:var(--cyan);
@@ -190,7 +212,7 @@
     color:rgba(255,255,255,.3);
     box-shadow:none;
   }
-  .act-btn.secondary:hover { color:rgba(255,255,255,.6); border-color:rgba(255,255,255,.3); background:transparent; }
+  .act-btn.secondary:hover { color:rgba(255,255,255,.5); border-color:rgba(255,255,255,.3); background:transparent; }
 
   .mode-row { display:flex; gap:10px; }
   .m-btn {
@@ -226,17 +248,19 @@
   .key.c { border-color:rgba(0,245,255,.3); color:var(--cyan); }
   .key.p { border-color:rgba(255,0,110,.3);  color:var(--pink); }
 
-  .touch-legend { display:none; flex-direction:column; align-items:center; gap:6px; }
+  .touch-legend { display:none; flex-direction:column; align-items:center; gap:4px; }
   body.touch .touch-legend { display:flex; }
-  .tleg { display:flex; align-items:center; gap:8px; font-family:var(--f2); font-size:9px; letter-spacing:2px; color:rgba(255,255,255,.2); text-transform:uppercase; }
-  .tdot { width:9px; height:9px; border-radius:50%; }
-  .tdot.c { background:var(--cyan); box-shadow:0 0 6px var(--cyan); }
-  .tdot.p { background:var(--pink); box-shadow:0 0 6px var(--pink); }
+  .tleg-row { display:flex; gap:20px; }
+  .tleg { display:flex; align-items:center; gap:6px; font-family:var(--f2); font-size:9px; letter-spacing:2px; color:rgba(255,255,255,.2); text-transform:uppercase; }
+  .tdot { width:8px; height:8px; border-radius:50%; }
+  .tdot.c { background:var(--cyan); box-shadow:0 0 5px var(--cyan); }
+  .tdot.p { background:var(--pink); box-shadow:0 0 5px var(--pink); }
 </style>
 </head>
 <body>
 <div id="app">
 
+  <!-- Score -->
   <div id="scorebar">
     <span class="p-label cyan" id="p1name">Jugador 1</span>
     <div class="scores">
@@ -247,59 +271,79 @@
     <span class="p-label pink" id="p2name">Jugador 2</span>
   </div>
 
-  <div id="gameRow">
-    <div class="t-zone left" id="tz1">
-      <button class="t-btn" id="t1u">&#9650;</button>
-      <button class="t-btn" id="t1d">&#9660;</button>
-    </div>
+  <!-- Canvas -->
+  <div id="cWrap">
+    <canvas id="gc"></canvas>
 
-    <div id="cWrap">
-      <canvas id="gc"></canvas>
+    <!-- Menu overlay -->
+    <div class="overlay" id="ovMenu">
+      <div class="ov-title">PING PONG</div>
+      <div class="ov-sub">Arcade Edition</div>
+      <div class="mode-row">
+        <button class="m-btn active" id="btn2p" onclick="setMode('2p')">2 Jugadores</button>
+        <button class="m-btn"        id="btnAI" onclick="setMode('ai')">vs CPU</button>
+      </div>
+      <div class="first-to">Primero en llegar a <span>7</span> puntos gana</div>
+      <button class="act-btn" onclick="startGame()">&#9654; Iniciar</button>
 
-      <div class="overlay" id="ovMenu">
-        <div class="ov-title">PING PONG</div>
-        <div class="ov-sub">Arcade Edition</div>
-        <div class="mode-row">
-          <button class="m-btn active" id="btn2p" onclick="setMode('2p')">2 Jugadores</button>
-          <button class="m-btn"        id="btnAI" onclick="setMode('ai')">vs CPU</button>
+      <!-- Desktop keys -->
+      <div class="key-legend">
+        <div class="kgrp">
+          <div class="klbl">Jugador 1</div>
+          <div class="kkeys"><div class="key c">W</div><div class="key c">S</div></div>
         </div>
-        <div class="first-to">Primero en llegar a <span>7</span> puntos gana</div>
-        <button class="act-btn" onclick="startGame()">&#9654; Iniciar</button>
-        <div class="key-legend">
-          <div class="kgrp">
-            <div class="klbl">Jugador 1</div>
-            <div class="kkeys"><div class="key c">W</div><div class="key c">S</div></div>
-          </div>
-          <div class="kgrp">
-            <div class="klbl">Jugador 2</div>
-            <div class="kkeys"><div class="key p">&#8593;</div><div class="key p">&#8595;</div></div>
-          </div>
-        </div>
-        <div class="touch-legend">
-          <div style="display:flex;gap:20px">
-            <div class="tleg"><div class="tdot c"></div>Botones izq = J1</div>
-            <div class="tleg"><div class="tdot p"></div>Botones der = J2</div>
-          </div>
+        <div class="kgrp">
+          <div class="klbl">Jugador 2</div>
+          <div class="kkeys"><div class="key p">&#8593;</div><div class="key p">&#8595;</div></div>
         </div>
       </div>
 
-      <div class="overlay hidden" id="ovEnd">
-        <div class="ov-sub">Ganador</div>
-        <div class="winner-text" id="winnerTxt"></div>
-        <div class="ov-sub" id="finalSc"></div>
-        <button class="act-btn" onclick="resetGame()">&#9654; Reiniciar</button>
-        <button class="act-btn secondary" onclick="showMenu()">&#8592; Menu</button>
+      <!-- Mobile legend -->
+      <div class="touch-legend">
+        <div class="tleg-row">
+          <div class="tleg"><div class="tdot c"></div>Izq = J1</div>
+          <div class="tleg"><div class="tdot p"></div>Der = J2</div>
+        </div>
+        <div class="ov-sub" style="font-size:8px;margin-top:2px">Usa los botones de abajo</div>
       </div>
     </div>
 
-    <div class="t-zone right" id="tz2">
-      <button class="t-btn" id="t2u">&#9650;</button>
-      <button class="t-btn" id="t2d">&#9660;</button>
+    <!-- Game over overlay -->
+    <div class="overlay hidden" id="ovEnd">
+      <div class="ov-sub">Ganador</div>
+      <div class="winner-text" id="winnerTxt"></div>
+      <div class="ov-sub" id="finalSc"></div>
+      <button class="act-btn" onclick="resetGame()">&#9654; Reiniciar</button>
+      <button class="act-btn secondary" onclick="showMenu()">&#8592; Menu</button>
     </div>
   </div>
 
+  <!-- Bottom touch bar (mobile) -->
+  <div id="touchBar">
+    <div class="touch-half left">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span class="t-label c">J1</span>
+        <div style="display:flex;gap:12px">
+          <button class="t-btn" id="t1u">&#9650;</button>
+          <button class="t-btn" id="t1d">&#9660;</button>
+        </div>
+      </div>
+    </div>
+    <div class="touch-half right" id="p2zone">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <span class="t-label p" id="p2touchLabel">J2</span>
+        <div style="display:flex;gap:12px">
+          <button class="t-btn" id="t2u">&#9650;</button>
+          <button class="t-btn" id="t2d">&#9660;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop footer -->
   <div id="footer">ESC &mdash; Pausa &nbsp;|&nbsp; R &mdash; Reiniciar &nbsp;|&nbsp; M &mdash; Menu</div>
-</div>
+
+</div><!-- app -->
 
 <script>
 var canvas = document.getElementById('gc');
@@ -307,6 +351,7 @@ var ctx    = canvas.getContext('2d');
 var LW = 800, LH = 500;
 var scale = 1, CW = LW, CH = LH;
 var isTouch = false;
+var TOUCH_BAR_H = 80;
 
 function detectTouch() {
   isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
@@ -314,11 +359,12 @@ function detectTouch() {
 }
 
 function sizeCanvas() {
-  var tzW  = isTouch ? (Math.min(80, window.innerWidth * 0.14) + 16) : 24;
-  var sbH  = document.getElementById('scorebar').offsetHeight || 56;
-  var ftH  = isTouch ? 0 : (document.getElementById('footer').offsetHeight || 28);
-  var maxW = window.innerWidth  - tzW * 2 - 16;
-  var maxH = window.innerHeight - sbH - ftH - 20;
+  var sb  = document.getElementById('scorebar').offsetHeight || 50;
+  var tb  = isTouch ? TOUCH_BAR_H : 0;
+  var ft  = isTouch ? 0 : (document.getElementById('footer').offsetHeight || 26);
+  var pad = 8;
+  var maxW = window.innerWidth  - pad;
+  var maxH = window.innerHeight - sb - tb - ft - pad;
   scale = Math.min(maxW / LW, maxH / LH, 1);
   CW = Math.round(LW * scale);
   CH = Math.round(LH * scale);
@@ -326,16 +372,14 @@ function sizeCanvas() {
   canvas.height = CH;
 }
 
-function showTouchZones() {
-  document.getElementById('tz1').classList.toggle('show', isTouch);
-  document.getElementById('tz2').classList.toggle('show', isTouch && gameMode === '2p');
-}
-
 detectTouch();
 sizeCanvas();
-showTouchZones();
-window.addEventListener('resize', function() { sizeCanvas(); if (gameState === 'menu') drawIdle(); });
+window.addEventListener('resize', function() {
+  sizeCanvas();
+  if (gameState === 'menu') drawIdle();
+});
 
+// ── Touch buttons ─────────────────────────────────────────────────────────────
 var touch = { p1u:false, p1d:false, p2u:false, p2d:false };
 
 function bindBtn(id, key) {
@@ -345,14 +389,15 @@ function bindBtn(id, key) {
   el.addEventListener('touchstart',  on,  {passive:false});
   el.addEventListener('touchend',    off, {passive:false});
   el.addEventListener('touchcancel', off, {passive:false});
-  el.addEventListener('mousedown',   on);
-  el.addEventListener('mouseup',     off);
-  el.addEventListener('mouseleave',  off);
+  el.addEventListener('mousedown', on);
+  el.addEventListener('mouseup',   off);
+  el.addEventListener('mouseleave',off);
 }
 
 bindBtn('t1u','p1u'); bindBtn('t1d','p1d');
 bindBtn('t2u','p2u'); bindBtn('t2d','p2d');
 
+// ── Game variables ────────────────────────────────────────────────────────────
 var PW=10, PH=80, BR=8, WIN=7;
 var gameMode='2p', gameState='menu';
 var score1=0, score2=0;
@@ -376,7 +421,11 @@ function setMode(m) {
   document.getElementById('btn2p').classList.toggle('active', m==='2p');
   document.getElementById('btnAI').classList.toggle('active', m==='ai');
   document.getElementById('p2name').textContent = m==='ai' ? 'CPU' : 'Jugador 2';
-  showTouchZones();
+  document.getElementById('p2touchLabel').textContent = m==='ai' ? 'CPU' : 'J2';
+  // Hide P2 buttons in AI mode
+  var p2zone = document.getElementById('p2zone');
+  p2zone.style.opacity = m==='ai' ? '0.25' : '1';
+  p2zone.style.pointerEvents = m==='ai' ? 'none' : 'auto';
 }
 
 function startGame() {
@@ -419,33 +468,28 @@ function updateSc() {
   document.getElementById('score2').textContent = score2;
 }
 
+// ── Particles ─────────────────────────────────────────────────────────────────
 function spawnPts(x, y, color) {
   for (var i=0; i<12; i++) {
-    var a = Math.random()*Math.PI*2;
-    var s = Math.random()*5+2;
+    var a=Math.random()*Math.PI*2, s=Math.random()*5+2;
     particles.push({x:x, y:y, vx:Math.cos(a)*s, vy:Math.sin(a)*s, life:1, decay:Math.random()*.04+.03, sz:Math.random()*4+1, color:color});
   }
 }
-
 function updPts() {
   particles = particles.filter(function(p){ return p.life>0; });
   particles.forEach(function(p){ p.x+=p.vx; p.y+=p.vy; p.vx*=.94; p.vy*=.94; p.life-=p.decay; });
 }
-
 function drawPts() {
   particles.forEach(function(p){
     ctx.save();
     ctx.globalAlpha = p.life*0.9;
-    ctx.fillStyle = p.color;
-    ctx.shadowColor = p.color;
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.arc(p.x*scale, p.y*scale, p.sz*scale, 0, Math.PI*2);
-    ctx.fill();
+    ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(p.x*scale, p.y*scale, p.sz*scale, 0, Math.PI*2); ctx.fill();
     ctx.restore();
   });
 }
 
+// ── AI ────────────────────────────────────────────────────────────────────────
 function updateAI() {
   if (gameMode !== 'ai') return;
   var diff = (ball.y - p2.h/2) - p2.y;
@@ -453,11 +497,12 @@ function updateAI() {
   p2.y = Math.max(0, Math.min(LH-p2.h, p2.y));
 }
 
+// ── Input ─────────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', function(e) {
   keys[e.code] = true;
   if (e.code==='Escape') {
-    if (gameState==='playing')       { gameState='paused'; cancelAnimationFrame(animId); drawPause(); }
-    else if (gameState==='paused')   { gameState='playing'; loop(); }
+    if (gameState==='playing')     { gameState='paused'; cancelAnimationFrame(animId); drawPause(); }
+    else if (gameState==='paused') { gameState='playing'; loop(); }
   }
   if (e.code==='KeyR') resetGame();
   if (e.code==='KeyM') showMenu();
@@ -476,13 +521,13 @@ function handleInput() {
   }
 }
 
+// ── Physics ───────────────────────────────────────────────────────────────────
 function update() {
   if (gameState !== 'playing') return;
   handleInput(); updateAI(); updPts();
 
   ball.trail.push({x:ball.x, y:ball.y});
   if (ball.trail.length > 10) ball.trail.shift();
-
   ball.x += ball.vx; ball.y += ball.vy;
 
   if (ball.y-ball.r <= 0)  { ball.y=ball.r;    ball.vy*=-1; spawnPts(ball.x, ball.r, '#fff'); }
@@ -490,9 +535,9 @@ function update() {
 
   if (ball.x-ball.r<=p1.x+p1.w && ball.x-ball.r>=p1.x && ball.y>=p1.y && ball.y<=p1.y+p1.h) {
     ball.x = p1.x+p1.w+ball.r;
-    var hp = (ball.y-(p1.y+p1.h/2))/(p1.h/2);
-    var sp = Math.min(Math.sqrt(ball.vx*ball.vx+ball.vy*ball.vy)+0.3, 14);
-    var an = hp*65*Math.PI/180;
+    var hp  = (ball.y-(p1.y+p1.h/2))/(p1.h/2);
+    var sp  = Math.min(Math.sqrt(ball.vx*ball.vx+ball.vy*ball.vy)+0.3, 14);
+    var an  = hp*65*Math.PI/180;
     ball.vx = sp*Math.cos(an); ball.vy = sp*Math.sin(an);
     spawnPts(ball.x, ball.y, '#00f5ff');
   }
@@ -511,87 +556,84 @@ function update() {
   if (flashTimer>0) flashTimer--;
 }
 
+// ── Render ────────────────────────────────────────────────────────────────────
 function S(v) { return v * scale; }
 
 function drawField() {
-  ctx.fillStyle = '#0a0a2a';
-  ctx.fillRect(0, 0, CW, CH);
+  ctx.fillStyle = '#0a0a2a'; ctx.fillRect(0,0,CW,CH);
   if (flashTimer>0) {
-    ctx.fillStyle = 'rgba(255,255,255,' + (flashTimer*0.003) + ')';
-    ctx.fillRect(0, 0, CW, CH);
+    ctx.fillStyle = 'rgba(255,255,255,'+(flashTimer*0.003)+')';
+    ctx.fillRect(0,0,CW,CH);
   }
-  ctx.setLineDash([S(12), S(10)]);
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = S(2);
-  ctx.beginPath(); ctx.moveTo(CW/2, 0); ctx.lineTo(CW/2, CH); ctx.stroke();
+  ctx.setLineDash([S(12),S(10)]);
+  ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=S(2);
+  ctx.beginPath(); ctx.moveTo(CW/2,0); ctx.lineTo(CW/2,CH); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = S(1.5);
-  ctx.beginPath(); ctx.arc(CW/2, CH/2, S(60), 0, Math.PI*2); ctx.stroke();
-
-  var g1 = ctx.createLinearGradient(0,0,S(40),0);
+  ctx.strokeStyle='rgba(255,255,255,0.04)'; ctx.lineWidth=S(1.5);
+  ctx.beginPath(); ctx.arc(CW/2,CH/2,S(60),0,Math.PI*2); ctx.stroke();
+  var g1=ctx.createLinearGradient(0,0,S(40),0);
   g1.addColorStop(0,'rgba(0,245,255,0.08)'); g1.addColorStop(1,'transparent');
   ctx.fillStyle=g1; ctx.fillRect(0,0,S(40),CH);
-
-  var g2 = ctx.createLinearGradient(CW,0,CW-S(40),0);
+  var g2=ctx.createLinearGradient(CW,0,CW-S(40),0);
   g2.addColorStop(0,'rgba(255,0,110,0.08)'); g2.addColorStop(1,'transparent');
   ctx.fillStyle=g2; ctx.fillRect(CW-S(40),0,S(40),CH);
 }
 
 function drawPaddle(p) {
-  ctx.shadowColor = p.color; ctx.shadowBlur = S(20);
-  var g = ctx.createLinearGradient(S(p.x),0,S(p.x+p.w),0);
-  g.addColorStop(0, p.color); g.addColorStop(1, p.color+'88');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.roundRect(S(p.x), S(p.y), S(p.w), S(p.h), S(4)); ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = 'rgba(255,255,255,0.2)';
-  ctx.beginPath(); ctx.roundRect(S(p.x)+1, S(p.y)+S(3), S(2), S(p.h-6), S(2)); ctx.fill();
+  ctx.shadowColor=p.color; ctx.shadowBlur=S(20);
+  var g=ctx.createLinearGradient(S(p.x),0,S(p.x+p.w),0);
+  g.addColorStop(0,p.color); g.addColorStop(1,p.color+'88');
+  ctx.fillStyle=g;
+  ctx.beginPath(); ctx.roundRect(S(p.x),S(p.y),S(p.w),S(p.h),S(4)); ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(255,255,255,0.2)';
+  ctx.beginPath(); ctx.roundRect(S(p.x)+1,S(p.y)+S(3),S(2),S(p.h-6),S(2)); ctx.fill();
 }
 
 function drawBall() {
-  ball.trail.forEach(function(t, i) {
-    ctx.globalAlpha = (i/ball.trail.length)*0.4;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(S(t.x), S(t.y), S(ball.r)*(i/ball.trail.length)*0.8, 0, Math.PI*2); ctx.fill();
+  ball.trail.forEach(function(t,i){
+    ctx.globalAlpha=(i/ball.trail.length)*0.4;
+    ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(S(t.x),S(t.y),S(ball.r)*(i/ball.trail.length)*0.8,0,Math.PI*2); ctx.fill();
   });
-  ctx.globalAlpha = 1;
-  ctx.shadowColor = '#fff'; ctx.shadowBlur = S(25);
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(S(ball.x), S(ball.y), S(ball.r), 0, Math.PI*2); ctx.fill();
-  ctx.shadowBlur = 0;
+  ctx.globalAlpha=1;
+  ctx.shadowColor='#fff'; ctx.shadowBlur=S(25);
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(S(ball.x),S(ball.y),S(ball.r),0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0;
 }
 
 function draw() { drawField(); drawPaddle(p1); drawPaddle(p2); drawBall(); drawPts(); }
 
 function drawPause() {
   draw();
-  ctx.fillStyle = 'rgba(4,4,15,0.7)'; ctx.fillRect(0,0,CW,CH);
-  ctx.fillStyle = '#00f5ff'; ctx.shadowColor = '#00f5ff'; ctx.shadowBlur = S(20);
-  ctx.font = 'bold ' + S(40)+'px Arial Black, Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('PAUSA', CW/2, CH/2);
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = S(11)+'px Courier New';
-  ctx.fillText('ESC PARA CONTINUAR', CW/2, CH/2 + S(30));
+  ctx.fillStyle='rgba(4,4,15,0.7)'; ctx.fillRect(0,0,CW,CH);
+  ctx.fillStyle='#00f5ff'; ctx.shadowColor='#00f5ff'; ctx.shadowBlur=S(20);
+  ctx.font='bold '+S(40)+'px Arial Black, Arial';
+  ctx.textAlign='center';
+  ctx.fillText('PAUSA',CW/2,CH/2);
+  ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(255,255,255,0.3)';
+  ctx.font=S(11)+'px Courier New';
+  ctx.fillText('ESC PARA CONTINUAR',CW/2,CH/2+S(30));
 }
 
 function drawIdle() {
-  ctx.fillStyle = '#0a0a2a'; ctx.fillRect(0,0,CW,CH);
+  ctx.fillStyle='#0a0a2a'; ctx.fillRect(0,0,CW,CH);
   ctx.setLineDash([S(12),S(10)]);
-  ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = S(2);
+  ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=S(2);
   ctx.beginPath(); ctx.moveTo(CW/2,0); ctx.lineTo(CW/2,CH); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.shadowColor = '#00f5ff'; ctx.shadowBlur = S(15);
-  ctx.fillStyle = '#00f5ff';
-  ctx.beginPath(); ctx.roundRect(S(30), CH/2-S(40), S(10), S(80), S(4)); ctx.fill();
-  ctx.shadowColor = '#ff006e'; ctx.fillStyle = '#ff006e';
-  ctx.beginPath(); ctx.roundRect(CW-S(40), CH/2-S(40), S(10), S(80), S(4)); ctx.fill();
-  ctx.shadowBlur = 0;
+  ctx.shadowColor='#00f5ff'; ctx.shadowBlur=S(15); ctx.fillStyle='#00f5ff';
+  ctx.beginPath(); ctx.roundRect(S(30),CH/2-S(40),S(10),S(80),S(4)); ctx.fill();
+  ctx.shadowColor='#ff006e'; ctx.fillStyle='#ff006e';
+  ctx.beginPath(); ctx.roundRect(CW-S(40),CH/2-S(40),S(10),S(80),S(4)); ctx.fill();
+  ctx.shadowBlur=0;
 }
 
 function loop() {
   update(); draw();
-  if (gameState === 'playing') animId = requestAnimationFrame(loop);
+  if (gameState==='playing') animId=requestAnimationFrame(loop);
 }
 
 drawIdle();
